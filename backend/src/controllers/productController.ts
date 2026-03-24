@@ -189,8 +189,10 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
       },
     });
 
+    // ... (previous code up to fetching candidate products)
+
     // 3. Semantic Scoring & Ranking
-    let processedData = products;
+    let processedData: (typeof products[0] & { score?: number })[] = products;
 
     if (rawSearch.trim()) {
       const tokens = SearchEngine.tokenize(rawSearch);
@@ -201,8 +203,9 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
           ...p,
           score: SearchEngine.scoreProduct(p, expandedTokens, rawSearch),
         }))
-        .filter((p) => p.score > 0)
-        .sort((a, b) => b.score - a.score);
+        // Note: score will definitely exist here, but we use ! to assure TS if strict null checks are on
+        .filter((p) => p.score! > 0)
+        .sort((a, b) => b.score! - a.score!);
     } else {
        processedData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }
@@ -213,9 +216,11 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
     const paginatedData = processedData.slice(skip, skip + limit);
 
-    const cleanData = paginatedData.map(({ score, ...rest }) => rest);
+    // Provide a default value for score during destructuring to handle cases where it's undefined
+    const cleanData = paginatedData.map(({ score = 0, ...rest }) => rest);
 
     // 5. Response
+    
     res.status(200).json({
       data: cleanData,
       pagination: {
