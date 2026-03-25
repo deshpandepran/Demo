@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Store, Truck, Shield, ArrowRight, Star, Zap, Clock, Package } from 'lucide-react';
-import API from "../../services/api";
 
 function useCountUp(target: number, duration = 1500, start = false) {
   const [count, setCount] = useState(0);
@@ -72,21 +71,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const statsRef = useRef<HTMLDivElement>(null);
   const [statsVisible, setStatsVisible] = useState(false);
-
   
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await API.get("/products");
-        console.log("PRODUCTS:", res.data);
-      } catch (err) {
-        console.log("ERROR:", err);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
