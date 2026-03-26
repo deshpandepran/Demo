@@ -430,13 +430,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         formData.append('image', product.image);
       }
 
-      const response = await api.post('/vendors/me/products', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      // Don't set Content-Type manually; axios/browser will add the boundary.
+      const response = await api.post('/vendors/me/products', formData);
       const newProduct = { ...response.data.data, vendorName: currentUser?.name || 'My Shop' };
       setProducts(prev => [...prev, newProduct]);
     } catch (error) {
-      console.error("Failed to add product:", error);
+      const err: any = error;
+      console.error("Failed to add product:", {
+        message: err?.message,
+        status: err?.response?.status,
+        data: err?.response?.data
+      });
     }
   };
 
@@ -454,7 +458,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateProduct = async (productId: string, updates: any) => {
     try {
       let payload: any = updates;
-      const headers: any = {};
       
       if (updates.image instanceof File) {
         payload = new FormData();
@@ -463,14 +466,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
             payload.append(key, value instanceof File ? value : String(value));
           }
         });
-        headers['Content-Type'] = 'multipart/form-data';
       }
 
-      const response = await api.patch(`/vendors/me/products/${productId}`, payload, { headers });
+      // Don't set Content-Type manually; axios/browser will add the boundary for FormData.
+      const response = await api.patch(`/vendors/me/products/${productId}`, payload);
       const updatedProduct = response.data.data;
       setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updatedProduct } : p));
     } catch (error) {
-      console.error("Failed to update product:", error);
+      const err: any = error;
+      console.error("Failed to update product:", {
+        message: err?.message,
+        status: err?.response?.status,
+        data: err?.response?.data
+      });
       setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
     }
   };
