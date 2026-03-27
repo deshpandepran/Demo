@@ -10,6 +10,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
   try {
     const { name, email, password, role, phone, address } = req.body;
 
+    if (phone) {
+      const cleanPhone = String(phone).trim();
+      if (!/^[0-9]{10}$/.test(cleanPhone)) {
+        return next(new AppError(`Phone number must contain exactly 10 digits. Received: "${cleanPhone}"`, 400));
+      }
+    }
+
     let dbRole: 'user' | 'vendor' | 'courier' | 'admin' = 'user';
     if (role === 'CUSTOMER' || role === 'user') dbRole = 'user';
     else if (role === 'VENDOR' || role === 'vendor') dbRole = 'vendor';
